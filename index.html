@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Player</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="color-scheme" content="light dark">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        .externaldropreceiver { position: fixed; inset: 0; display: none; }
+        .container { display: flex; height: 100vh; }
+        .boxmedia { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .boxmedia img, .boxmedia video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .controls, .exchanger { 
+            position: absolute; 
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .zoom-controls { top: 5px; left: 5px; display: flex; gap: 5px; flex-direction: column; }
+        .close-control { top: 5px; right: 5px; }
+        .exchanger { width: 50px; height: 50px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: grab; }
+        .exchangerreceiver { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.2); display: none; }
+        .boxmedia:hover .controls, .boxmedia:hover .exchanger { opacity: 1; }
+        .dragging .exchangerreceiver { display: block !important; }
+        .dragging .controls { opacity: 0 !important; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="externaldropreceiver" id="dropzone"></div>
+    <div class="container" id="mediaContainer"></div>
+    <script>
+        const dropzone = document.getElementById("dropzone");
+        const mediaContainer = document.getElementById("mediaContainer");
+        
+let targetBox = null;
+
+        window.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropzone.style.display = "block";
+        });
+        
+        window.addEventListener("dragleave", (e) => {
+            if (e.relatedTarget === null) dropzone.style.display = "none";
+        });
+        
+        window.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropzone.style.display = "none";
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith("image") || file.type.startsWith("video")) {
+                    const mediaSrc = URL.createObjectURL(file);
+                    createMediaBox(mediaSrc, file.type);
+                }
+            });
+        }
+
+        function createMediaBox(src, type) {
+            let draggedBox = null;
+            const box = document.createElement("div");
+            box.className = "boxmedia";
+
+            const media = document.createElement(type.startsWith("image") ? "img" : "video");
+            media.src = src;
+            media.style.height = "100%";
+            media.style.transform = "scale(1) translate(0px, 0px)";
+            if (type.startsWith("video")) {
+                media.controls = true;
+                media.autoplay = true;
+                media.muted = true;
+                media.loop = true;
+            }
+            box.appendChild(media);
+
+            const zoomControls = document.createElement("div");
+            zoomControls.className = "controls zoom-controls";
+            
+            const zoomInBtn = document.createElement("button");
+            zoomInBtn.textContent = "+";
+            zoomInBtn.onclick = () => {
+                let scale = parseFloat(media.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                media.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
+            };
+            
+            const zoomOutBtn = document.createElement("button");
+            zoomOutBtn.textContent = "-";
+            zoomOutBtn.onclick = () => {
+                let scale = parseFloat(media.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                media.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
+            };
+            
+            const move = (dx, dy) => {
+                let [scale, translateX, translateY] = media.style.transform.match(/scale\((.*?)\) translate\((.*?)px, (.*?)px\)/)?.slice(1).map(parseFloat) || [1, 0, 0];
+                media.style.transform = `scale(${scale}) translate(${translateX + dx}px, ${translateY + dy}px)`;
+            };
+            
+            const leftArrowBtn = document.createElement("button");
+            leftArrowBtn.textContent = "⬅";
+            leftArrowBtn.onclick = () => move(-10, 0);
+            
+            const rightArrowBtn = document.createElement("button");
+            rightArrowBtn.textContent = "➡";
+            rightArrowBtn.onclick = () => move(10, 0);
+            
+            const upArrowBtn = document.createElement("button");
+            upArrowBtn.textContent = "⬆";
+            upArrowBtn.onclick = () => move(0, -10);
+            
+            const downArrowBtn = document.createElement("button");
+            downArrowBtn.textContent = "⬇";
+            downArrowBtn.onclick = () => move(0, 10);
+            
+            zoomControls.append(zoomInBtn, zoomOutBtn, upArrowBtn, downArrowBtn, leftArrowBtn, rightArrowBtn);
+            
+            const closeControl = document.createElement("div");
+            closeControl.className = "controls close-control";
+            
+            const closeBtn = document.createElement("button");
+            closeBtn.textContent = "✖";
+            closeBtn.onclick = () => { 
+                box.remove(); 
+                adjustLayout();
+            };
+            closeControl.appendChild(closeBtn);
+            
+            
+            const exchanger = document.createElement("div");
+            exchanger.className = "exchanger";
+            exchanger.draggable = true;
+            exchanger.ondragstart = (e) => {
+                window.draggedBox = box;
+                e.dataTransfer.effectAllowed = 'move';
+                draggedBox = box;
+                mediaContainer.querySelectorAll(".boxmedia").forEach(b => {
+                    if (b !== box) {
+                        b.classList.add("dragging");
+                        b.querySelector(".exchangerreceiver").style.display = "block";
+                    }
+                });
+            };
+            exchanger.ondragend = () => {
+                mediaContainer.querySelectorAll(".boxmedia").forEach(b => {
+                    b.classList.remove("dragging");
+                    b.querySelector(".exchangerreceiver").style.display = "none";
+                });
+                draggedBox = null;
+            };
+            
+            const exchangerReceiver = document.createElement("div");
+            exchangerReceiver.className = "exchangerreceiver";
+            exchangerReceiver.ondragover = (e) => e.preventDefault();
+            exchangerReceiver.ondrop = (e) => {
+                e.preventDefault();
+                targetBox = box;
+                if (window.draggedBox && targetBox && window.draggedBox !== targetBox) {
+                    const draggedMedia = window.draggedBox.querySelector("img, video");
+                    const targetMedia = targetBox.querySelector("img, video");
+                    
+                    if (draggedMedia && targetMedia) {
+                        const clonedDraggedMedia = draggedMedia.cloneNode(true);
+                        const clonedTargetMedia = targetMedia.cloneNode(true);
+                        
+                        targetMedia.parentNode.replaceChild(clonedDraggedMedia, targetMedia);
+                        if (clonedDraggedMedia.tagName === "VIDEO") {
+                            clonedDraggedMedia.muted = true;
+                            clonedDraggedMedia.autoplay = true;
+                            clonedDraggedMedia.loop = true;
+                        }
+                        updateZoomControls(targetBox, clonedDraggedMedia);
+                        updateMoveControls(targetBox, clonedDraggedMedia);
+                        draggedMedia.parentNode.replaceChild(clonedTargetMedia, draggedMedia);
+                        if (clonedTargetMedia.tagName === "VIDEO") {
+                            clonedTargetMedia.muted = true;
+                            clonedTargetMedia.autoplay = true;
+                            clonedTargetMedia.loop = true;
+                        }
+                        updateZoomControls(window.draggedBox, clonedTargetMedia);
+                        updateMoveControls(window.draggedBox, clonedTargetMedia);
+                    }
+                }
+            };
+                
+       
+            
+            box.append(zoomControls, closeControl, exchanger, exchangerReceiver);
+            box.appendChild(exchanger);
+            box.appendChild(exchangerReceiver);
+            mediaContainer.appendChild(box);
+            adjustLayout();
+        }
+
+        function updateZoomControls(box, media) {
+            const zoomControls = box.querySelector(".zoom-controls");
+            const zoomInBtn = zoomControls.children[0];
+            const zoomOutBtn = zoomControls.children[1];
+            
+            zoomInBtn.onclick = () => {
+                let scale = parseFloat(media.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                media.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
+            };
+            
+            zoomOutBtn.onclick = () => {
+                let scale = parseFloat(media.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                media.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
+            };
+        }
+
+        function updateMoveControls(box, media) {
+            const move = (dx, dy) => {
+                let [scale, translateX, translateY] = media.style.transform.match(/scale\((.*?)\) translate\((.*?)px, (.*?)px\)/)?.slice(1).map(parseFloat) || [1, 0, 0];
+                media.style.transform = `scale(${scale}) translate(${translateX + dx}px, ${translateY + dy}px)`;
+            };
+            
+            const moveControls = box.querySelector(".zoom-controls");
+            moveControls.children[2].onclick = () => move(0, -10); // Up
+            moveControls.children[3].onclick = () => move(0, 10);  // Down
+            moveControls.children[4].onclick = () => move(-10, 0); // Left
+            moveControls.children[5].onclick = () => move(10, 0);  // Right
+        }
+        
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("Service Worker registrado"))
+            .catch((error) => console.log("Error en el registro del Service Worker", error));
+        }
+    </script>
+</body>
+</html>
