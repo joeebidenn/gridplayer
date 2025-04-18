@@ -100,6 +100,10 @@ let targetBox = null;
                 media.style.transform = `scale(${scale}) translate(${translateX + dx}px, ${translateY + dy}px)`;
             };
             
+            const expandIt= (size)=>{
+                box.style.flex=size
+            }
+            
             const leftArrowBtn = document.createElement("button");
             leftArrowBtn.textContent = "⬅";
             leftArrowBtn.onclick = () => move(-10, 0);
