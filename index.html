@@ -115,8 +115,30 @@ let targetBox = null;
             const downArrowBtn = document.createElement("button");
             downArrowBtn.textContent = "⬇";
             downArrowBtn.onclick = () => move(0, 10);
+
+            const expand1Btn = document.createElement("button");
+            expand1Btn.textContent = "1x";
+            expand1Btn.onclick = () => expandIt(1)
+
+            const expand2Btn = document.createElement("button");
+            expand2Btn.textContent = "2x";
+            expand2Btn.onclick = () => expandIt(2)
+
+            const expand3Btn = document.createElement("button");
+            expand3Btn.textContent = "3x";
+            expand3Btn.onclick = () => expandIt(3)
             
-            zoomControls.append(zoomInBtn, zoomOutBtn, upArrowBtn, downArrowBtn, leftArrowBtn, rightArrowBtn);
+            zoomControls.append(
+                zoomInBtn, 
+                zoomOutBtn,
+                upArrowBtn,
+                downArrowBtn,
+                leftArrowBtn, 
+                rightArrowBtn,
+                expand1Btn,
+                expand2Btn,
+                expand3Btn
+            );
             
             const closeControl = document.createElement("div");
             closeControl.className = "controls close-control";
@@ -125,7 +147,6 @@ let targetBox = null;
             closeBtn.textContent = "✖";
             closeBtn.onclick = () => { 
                 box.remove(); 
-                adjustLayout();
             };
             closeControl.appendChild(closeBtn);
             
@@ -192,7 +213,6 @@ let targetBox = null;
             box.appendChild(exchanger);
             box.appendChild(exchangerReceiver);
             mediaContainer.appendChild(box);
-            adjustLayout();
         }
 
         function updateZoomControls(box, media) {
