@@ -32,6 +32,12 @@
     <div class="externaldropreceiver" id="dropzone"></div>
     <div class="container" id="mediaContainer"></div>
     <script>
+
+        const SUPPORTED_EXTENSIONS = {
+          video: ['mp4', 'webm', 'ogg'.'avi','wmv','mpg'],
+          image: ['jpg', 'jpeg', 'png', 'gif','heic','webp']
+        };
+        
         const dropzone = document.getElementById("dropzone");
         const mediaContainer = document.getElementById("mediaContainer");
         
@@ -54,10 +60,15 @@ let targetBox = null;
 
         function handleFiles(files) {
             Array.from(files).forEach(file => {
-                if (file.type.startsWith("image") || file.type.startsWith("video")) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (SUPPORTED_EXTENSIONS.video.includes(ext) || SUPPORTED_EXTENSIONS.image.includes(ext)) {
                     const mediaSrc = URL.createObjectURL(file);
                     createMediaBox(mediaSrc, file.type);
                 }
+                /*if (file.type.startsWith("image") || file.type.startsWith("video")) {
+                    const mediaSrc = URL.createObjectURL(file);
+                    createMediaBox(mediaSrc, file.type);
+                }*/
             });
         }
 
