@@ -61,9 +61,14 @@ let targetBox = null;
         function handleFiles(files) {
             Array.from(files).forEach(file => {
                 const ext = file.name.split('.').pop().toLowerCase();
-                if (SUPPORTED_EXTENSIONS.video.includes(ext) || SUPPORTED_EXTENSIONS.image.includes(ext)) {
-                    const mediaSrc = URL.createObjectURL(file);
-                    createMediaBox(mediaSrc, file.type);
+               
+                if (SUPPORTED_EXTENSIONS.video.includes(ext)) {
+                     const mediaSrc = URL.createObjectURL(file);
+                    createMediaBox(mediaSrc, 'video');
+                }
+                if(SUPPORTED_EXTENSIONS.image.includes(ext)){
+                     const mediaSrc = URL.createObjectURL(file);
+                    createMediaBox(mediaSrc, 'image');
                 }
                 /*if (file.type.startsWith("image") || file.type.startsWith("video")) {
                     const mediaSrc = URL.createObjectURL(file);
