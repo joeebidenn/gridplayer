@@ -483,6 +483,53 @@ const expandIt= (e, size)=>{
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const moveStep = (e, dx, dy) => {
+    const bmedia = e.target.parentElement.parentElement.querySelector("img, video");
+    const container = bmedia.parentElement;
+
+    // Obtener transform actual de forma compatible
+    const style = getComputedStyle(bmedia).transform;
+
+    let scale = 1, x = 0, y = 0;
+
+    if (style && style !== 'none') {
+      if (style.startsWith('matrix3d')) {
+        // Si es 3D, tomamos tx, ty y asumimos scale uniforme (aprox)
+        const values = style.match(/matrix3d\(([^)]+)\)/)[1].split(',').map(Number);
+        scale = values[0]; // escala aproximada
+        x = values[12];
+        y = values[13];
+      } else if (style.startsWith('matrix')) {
+        const values = style.match(/matrix\(([^)]+)\)/)[1].split(',').map(Number);
+        const [a, b, c, d, tx, ty] = values;
+        scale = a; // asumimos escala uniforme (a=d)
+        x = tx;
+        y = ty;
+      }
+    }
+
+    const scaledW = bmedia.offsetWidth * scale;
+    const scaledH = bmedia.offsetHeight * scale;
+    const maxX = Math.max(0, (scaledW - container.clientWidth) / (2 * scale));
+    const maxY = Math.max(0, (scaledH - container.clientHeight) / (2 * scale));
+
+    // Actualizar posición según dx, dy
+    if (dx === 'max') x = maxX;
+    else if (dx === '-max') x = -maxX;
+    else x += dx;
+
+    if (dy === 'max') y = maxY;
+    else if (dy === '-max') y = -maxY;
+    else y += dy;
+
+    x = clamp(x, -maxX, maxX);
+    y = clamp(y, -maxY, maxY);
+
+    // Aplicar transformación en formato scale + translate
+    bmedia.style.transform = `scale(${scale}) translate(${x}px, ${y}px)`;
+  };
+/*
+//only in chrome
+const moveStep = (e, dx, dy) => {
   const bmedia = e.target.parentElement.parentElement.querySelector("img, video");
   const container = bmedia.parentElement;
 
@@ -506,7 +553,7 @@ const moveStep = (e, dx, dy) => {
   y = clamp(y, -maxY, maxY);
 
   bmedia.style.transform = `scale(${scale}) translate(${x}px, ${y}px)`;
-};
+};*/
 
 const zoom = (bmedia,isZoomIn) => {
     if(isZoomIn){
