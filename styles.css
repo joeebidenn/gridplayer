@@ -43,9 +43,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
 .right-container { top: 50%; right: 4px; display: flex; gap: 4px; flex-direction: row; }
 .left-container { top: 50%; left: 4px; display: flex; gap: 4px; flex-direction: row; }
 /*zoom container*/
-.zoom-container { top: 5px; left: 5px; display: flex; gap: 5px; flex-direction: column; }
+.zoom-container { top: 4px; left: 4px; display: flex; gap: 4px; flex-direction: column; }
 /*size container*/
-.size-container { bottom: 64px; left: 5px; display: flex; gap: 5px; flex-direction: column; }
+.size-container { bottom: 64px; left: 4px; display: flex; gap: 4px; flex-direction: column; }
 /*close container*/
-.close-container { top: 5px; right: 5px; }
-
+.close-container { top: 4px; right: 4px; }
+/*draw container*/
+.draw-container { bottom: 64px; right: 4px; display: flex; gap: 4px; flex-direction: column; }

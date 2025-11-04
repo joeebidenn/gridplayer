@@ -3,6 +3,11 @@ const SUPPORTED_EXTENSIONS = {
     image: ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp'],
     pdf: ['pdf']
 };
+
+const BRUSH_COLORS = ["red", "blue", "green", "orange", "purple", "black","white"];
+let currentBrushColorIndex = 0;
+let currentBrushColor = BRUSH_COLORS[currentBrushColorIndex];
+
 var SWIPE_STARTER;
 var SWIPE_RECEIVER;
 const dropzone = document.getElementById("dropzone");
@@ -138,7 +143,7 @@ function addDrawTool(mediabox) {
     currentY = e.clientY - rect.top;
 
     ctx.lineTo(currentX, currentY);
-    ctx.strokeStyle = "red";
+    ctx.strokeStyle =currentBrushColor;
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -157,7 +162,7 @@ function addDrawTool(mediabox) {
         const radius = Math.hypot(currentX - startX, currentY - startY);
         ctx.beginPath();
         ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = "blue";
+        ctx.strokeStyle = currentBrushColor;
         ctx.lineWidth = 2;
         ctx.stroke();
       } else {
@@ -302,7 +307,7 @@ function addImageVideoTools(mediabox){
 }
 function addTools(mediabox){
 
-    //CLOSE CONTROL
+    //CLOSE CONTAINER
     const closeContainer = document.createElement("div");
     closeContainer.className = "controls close-container";
 
@@ -313,8 +318,22 @@ function addTools(mediabox){
          e.target.parentElement.parentElement.remove();
     };
 
+    closeContainer.append(closeButton);
+    //DRAW CONTAINER
 
-    // 🖊 NUEVO BOTÓN DE DIBUJO
+    const drawContainer = document.createElement("div");
+    drawContainer.className = "controls draw-container";
+
+    const colorButton = document.createElement("button");
+    colorButton.textContent = "< >️";
+    colorButton.style.backgroundColor = currentBrushColor;
+    colorButton.onclick = () => {
+        currentBrushColorIndex = (currentBrushColorIndex + 1) % BRUSH_COLORS.length;
+        currentBrushColor = BRUSH_COLORS[currentBrushColorIndex];
+        colorButton.style.backgroundColor = currentBrushColor;
+     };
+
+
     const drawToggleButton = document.createElement("button");
     drawToggleButton.textContent = "🖊";
     drawToggleButton.dataset.active = "false"; // estado inicial
@@ -332,8 +351,9 @@ function addTools(mediabox){
 
             if (swipeStarter) swipeStarter.style.display = ""; 
 
+            drawToggleButton.textContent = "🖊";
             drawToggleButton.dataset.active = "false";
-            drawToggleButton.style.opacity = "0.5";
+            //drawToggleButton.style.opacity = "0.5";
         } else {
             // 🔹 Activar dibujo → crear canvas
             const canvas = addDrawTool(box);
@@ -347,16 +367,16 @@ function addTools(mediabox){
             } else {
                 box.appendChild(canvas); // fallback
             }
-
+            drawToggleButton.textContent = "♻️";
             if (swipeStarter) swipeStarter.style.display = "none";
 
             drawToggleButton.dataset.active = "true";
-            drawToggleButton.style.opacity = "1";
+            //drawToggleButton.style.opacity = "1";
         }
     };
 
+    drawContainer.append(drawToggleButton,colorButton);
 
-   closeContainer.append(closeButton, drawToggleButton);
 
 
 
@@ -387,7 +407,8 @@ function addTools(mediabox){
 
     mediabox.append(
         closeContainer,
-        sizeContanier,
+        drawContainer,
+        sizeContanier
     )
 }
 
