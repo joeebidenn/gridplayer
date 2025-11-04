@@ -1,6 +1,7 @@
 const SUPPORTED_EXTENSIONS = {
     video: ['mp4', 'webm', 'ogg', 'avi', 'wmv', 'mpg', 'mov', 'mkv', 'MOV', 'MP4'],
-    image: ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp']
+    image: ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp'],
+    pdf: ['pdf']
 };
 var SWIPE_STARTER;
 var SWIPE_RECEIVER;
@@ -48,23 +49,40 @@ function handleFiles(files) {
             const mediaSrc = URL.createObjectURL(file);
             addMediaBox(mediaSrc, 'image');
         }
+        if(SUPPORTED_EXTENSIONS.pdf.includes(ext)){
+            const mediaSrc = URL.createObjectURL(file);
+            addMediaBox(mediaSrc, 'pdf');
+        }
+
+
     });
 }
 
 function addMediaBox(src, type){
     const mediabox = document.createElement("div");
     mediabox.className = "mediabox";
-    const media = document.createElement(type.startsWith("image") ? "img" : "video");
-    media.src = src;
-    media.style.height = "100%";
-    media.style.transform = "scale(1) translate(0px, 0px)";
-    if (type.startsWith("video")) {
-        media.controls = true;
-        media.autoplay = true;
-        media.muted = true;
-        media.loop = true;
+    if(type==='pdf'){
+        const media = document.createElement("iframe");
+        media.src = src;
+        media.style.width = "100%";
+        media.style.height = "100%";
+        media.style.border = "none";
+        mediabox.appendChild(media);
+    }else{
+        const media = document.createElement(type.startsWith("image") ? "img" : "video");
+        media.src = src;
+        media.style.height = "100%";
+        media.style.transform = "scale(1) translate(0px, 0px)";
+        if (type.startsWith("video")) {
+            media.controls = true;
+            media.autoplay = true;
+            media.muted = true;
+            media.loop = true;
+        }
+        mediabox.appendChild(media);
     }
-    mediabox.appendChild(media);
+
+
     addTools(mediabox);
     //addLeftControls(mediabox);
     //addRightControls(mediabox);
