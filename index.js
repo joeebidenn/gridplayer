@@ -89,6 +89,22 @@ function addLeftControls(mediabox){
     zoomControls.className = "controls zoom-controls";
 
 
+    mediabox.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        if(e.deltaX===0){
+            if(e.deltaY>0){
+                const bmedia=e.currentTarget.querySelector("img, video")
+                let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                bmedia.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
+
+            }else{
+                const bmedia=e.currentTarget.querySelector("img, video")
+                let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+                bmedia.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
+            }
+        }
+    });
+
     const zoomInBtn = document.createElement("button");
     zoomInBtn.textContent = "+";
     zoomInBtn.onclick = (e) => {
