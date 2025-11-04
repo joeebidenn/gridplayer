@@ -83,10 +83,57 @@ function addMediaBox(src, type){
         mediabox.appendChild(media);
         addTools(mediabox);
         addImageVideoTools(mediabox)
+        //addDrawTool(mediabox)
     }
 
     addMediaBoxExchangeComponent(mediabox)
     boxmediacontainer.appendChild(mediabox);
+}
+
+function addDrawTool(mediabox){
+    const canvas = document.createElement("canvas");
+    canvas.className = "draw-layer";
+    canvas.style.position = "absolute";
+    canvas.style.top = 0;
+    canvas.style.left = 0;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.pointerEvents = "auto";
+
+
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+
+    function resizeCanvas() {
+        const rect = mediabox.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    canvas.addEventListener("mousedown", (e) => {
+        drawing = true;
+        const rect = canvas.getBoundingClientRect();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.stroke();
+    });
+
+    ["mouseup", "mouseleave"].forEach(ev =>
+        canvas.addEventListener(ev, () => drawing = false)
+    );
+
+    return canvas;
 }
 
 function addImageVideoTools(mediabox){
@@ -222,7 +269,51 @@ function addTools(mediabox){
         //parent(button).parent(div).remover()
          e.target.parentElement.parentElement.remove();
     };
-    closeContainer.append(closeButton);
+
+
+    // 🖊 NUEVO BOTÓN DE DIBUJO
+    const drawToggleButton = document.createElement("button");
+    drawToggleButton.textContent = "🖊";
+    drawToggleButton.dataset.active = "false"; // estado inicial
+
+    drawToggleButton.onclick = (e) => {
+        const box = e.target.closest(".mediabox");
+        const active = drawToggleButton.dataset.active === "true";
+
+        const swipeStarter = box.querySelector(".swipestarter");
+
+        if (active) {
+            // 🔹 Desactivar dibujo → eliminar canvas
+            const existingCanvas = box.querySelector(".draw-layer");
+            if (existingCanvas) existingCanvas.remove();
+
+            if (swipeStarter) swipeStarter.style.display = ""; 
+
+            drawToggleButton.dataset.active = "false";
+            drawToggleButton.style.opacity = "0.5";
+        } else {
+            // 🔹 Activar dibujo → crear canvas
+            const canvas = addDrawTool(box);
+
+            // 🧩 Insertar el canvas justo después del img o video o iframe
+            const media = box.querySelector("img, video, iframe");
+            if (media && media.nextSibling) {
+                box.insertBefore(canvas, media.nextSibling);
+            } else if (media) {
+                box.appendChild(canvas);
+            } else {
+                box.appendChild(canvas); // fallback
+            }
+
+            if (swipeStarter) swipeStarter.style.display = "none";
+
+            drawToggleButton.dataset.active = "true";
+            drawToggleButton.style.opacity = "1";
+        }
+    };
+
+
+   closeContainer.append(closeButton, drawToggleButton);
 
 
 
