@@ -68,6 +68,7 @@ function addMediaBox(src, type){
         media.style.height = "100%";
         media.style.border = "none";
         mediabox.appendChild(media);
+        addTools(mediabox);
     }else{
         const media = document.createElement(type.startsWith("image") ? "img" : "video");
         media.src = src;
@@ -80,68 +81,15 @@ function addMediaBox(src, type){
             media.loop = true;
         }
         mediabox.appendChild(media);
+        addTools(mediabox);
+        addImageVideoTools(mediabox)
     }
 
-
-    addTools(mediabox);
-    //addLeftControls(mediabox);
-    //addRightControls(mediabox);
     addMediaBoxExchangeComponent(mediabox)
     boxmediacontainer.appendChild(mediabox);
 }
 
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-const moveStep = (e, dx, dy) => {
-  const bmedia = e.target.parentElement.parentElement.querySelector("img, video");
-  const container = bmedia.parentElement;
-
-  const match = bmedia.style.transform.match(/scale\((.*?)\)\s*translate\((.*?)px,\s*(.*?)px\)/);
-  let [scale, x, y] = match ? match.slice(1).map(parseFloat) : [1, 0, 0];
-
-  const scaledW = bmedia.offsetWidth * scale;
-  const scaledH = bmedia.offsetHeight * scale;
-  const maxX = Math.max(0, (scaledW - container.clientWidth) / (2 * scale));
-  const maxY = Math.max(0, (scaledH - container.clientHeight) / (2 * scale));
-
-  if (dx === 'max') x = maxX;
-  else if (dx === '-max') x = -maxX;
-  else x += dx;
-
-  if (dy === 'max') y = maxY;
-  else if (dy === '-max') y = -maxY;
-  else y += dy;
-
-  x = clamp(x, -maxX, maxX);
-  y = clamp(y, -maxY, maxY);
-
-  bmedia.style.transform = `scale(${scale}) translate(${x}px, ${y}px)`;
-};
-
-const zoom = (bmedia,isZoomIn) => {
-    if(isZoomIn){
-        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-        bmedia.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
-
-    }else{
-        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-        bmedia.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
-    }
-}
-function addTools(mediabox){
-
-    //CLOSE CONTROL
-    const closeContainer = document.createElement("div");
-    closeContainer.className = "controls close-container";
-
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "✖";
-    closeButton.onclick = (e) => {
-        //parent(button).parent(div).remover()
-         e.target.parentElement.parentElement.remove();
-    };
-    closeContainer.append(closeButton);
-
+function addImageVideoTools(mediabox){
     //ZOOM CONTROL
 
     const zoomContanier = document.createElement("div");
@@ -188,30 +136,6 @@ function addTools(mediabox){
             }
         }
     });
-
-    //SIZE CONTROL
-
-    const sizeContanier = document.createElement("div");
-    sizeContanier.className = "controls size-container";
-
-    const expand1Btn = document.createElement("button");
-    expand1Btn.textContent = "1x";
-    expand1Btn.onclick = (e) => expandIt(e,1)
-
-    const expand2Btn = document.createElement("button");
-    expand2Btn.textContent = "2x";
-    expand2Btn.onclick = (e) => expandIt(e,2)
-
-    const expand3Btn = document.createElement("button");
-    expand3Btn.textContent = "3x";
-    expand3Btn.onclick = (e) => expandIt(e,3)
-
-    sizeContanier.append(
-        expand1Btn,
-        expand2Btn,
-        expand3Btn
-    )
-
 
     //PAN CONTROLS
     const topToolContainer = document.createElement("div");
@@ -277,83 +201,35 @@ function addTools(mediabox){
         leftStep
     )
 
-
-
+    //add TO MEDIABOX
     mediabox.append(
-        closeContainer,
         zoomContanier,
-        sizeContanier,
         topToolContainer,
         bottomToolContainer,
         rightToolContainer,
         leftToolContainer
     )
 }
+function addTools(mediabox){
 
-const move = (e, dx, dy) => {
-    const bmedia=e.target.parentElement.parentElement.querySelector("img, video")
-    let [scale, translateX, translateY] = bmedia.style.transform.match(/scale\((.*?)\) translate\((.*?)px, (.*?)px\)/)?.slice(1).map(parseFloat) || [1, 0, 0];
-    bmedia.style.transform = `scale(${scale}) translate(${translateX + dx}px, ${translateY + dy}px)`;
-};
+    //CLOSE CONTROL
+    const closeContainer = document.createElement("div");
+    closeContainer.className = "controls close-container";
 
-const expandIt= (e, size)=>{
-    const bmedia=e.target.parentElement.parentElement
-    bmedia.style.flex=size
-}
-
-
-function addLeftControls(mediabox){
-    const zoomControls = document.createElement("div");
-    zoomControls.className = "controls zoom-controls";
-
-
-    mediabox.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        if(e.deltaX===0){
-            if(e.deltaY>0){
-                const bmedia=e.currentTarget.querySelector("img, video")
-                let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-                bmedia.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
-
-            }else{
-                const bmedia=e.currentTarget.querySelector("img, video")
-                let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-                bmedia.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
-            }
-        }
-    });
-
-    const zoomInBtn = document.createElement("button");
-    zoomInBtn.textContent = "+";
-    zoomInBtn.onclick = (e) => {
-        const bmedia=e.target.parentElement.parentElement.querySelector("img, video")
-        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-        bmedia.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "✖";
+    closeButton.onclick = (e) => {
+        //parent(button).parent(div).remover()
+         e.target.parentElement.parentElement.remove();
     };
+    closeContainer.append(closeButton);
 
-    const zoomOutBtn = document.createElement("button");
-    zoomOutBtn.textContent = "-";
-    zoomOutBtn.onclick = (e) => {
-        const bmedia=e.target.parentElement.parentElement.querySelector("img, video")
-        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
-        bmedia.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
-    };
 
-    const leftArrowBtn = document.createElement("button");
-    leftArrowBtn.textContent = "⬅";
-    leftArrowBtn.onclick = (e) => move(e, -10, 0);
 
-    const rightArrowBtn = document.createElement("button");
-    rightArrowBtn.textContent = "➡";
-    rightArrowBtn.onclick = (e) => move(e, 10, 0);
+    //SIZE CONTROL
 
-    const upArrowBtn = document.createElement("button");
-    upArrowBtn.textContent = "⬆";
-    upArrowBtn.onclick = (e) => move(e, 0, -10);
-
-    const downArrowBtn = document.createElement("button");
-    downArrowBtn.textContent = "⬇";
-    downArrowBtn.onclick = (e) => move(e, 0, 10);
+    const sizeContanier = document.createElement("div");
+    sizeContanier.className = "controls size-container";
 
     const expand1Btn = document.createElement("button");
     expand1Btn.textContent = "1x";
@@ -367,33 +243,18 @@ function addLeftControls(mediabox){
     expand3Btn.textContent = "3x";
     expand3Btn.onclick = (e) => expandIt(e,3)
 
-    zoomControls.append(
-        zoomInBtn,
-        zoomOutBtn,
-        upArrowBtn,
-        downArrowBtn,
-        leftArrowBtn,
-        rightArrowBtn,
+    sizeContanier.append(
         expand1Btn,
         expand2Btn,
         expand3Btn
     )
 
-    mediabox.append(zoomControls)
-}
+    //add TO MEDIABOX
 
-function addRightControls(mediabox){
-    const closeControl = document.createElement("div");
-    closeControl.className = "controls close-control";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "✖";
-    closeBtn.onclick = (e) => {
-        //parent(button).parent(div).remover()
-         e.target.parentElement.parentElement.remove();
-    };
-    closeControl.appendChild(closeBtn);
-    mediabox.append(closeControl)
+    mediabox.append(
+        closeContainer,
+        sizeContanier,
+    )
 }
 
 function addMediaBoxExchangeComponent(mediabox){
@@ -456,4 +317,55 @@ function addMediaBoxExchangeComponent(mediabox){
     mediabox.append(swipestarter, swipereceiver);
 
 
+
 }
+
+
+const expandIt= (e, size)=>{
+    const bmedia=e.target.parentElement.parentElement
+    bmedia.style.flex=size
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const moveStep = (e, dx, dy) => {
+  const bmedia = e.target.parentElement.parentElement.querySelector("img, video");
+  const container = bmedia.parentElement;
+
+  const match = bmedia.style.transform.match(/scale\((.*?)\)\s*translate\((.*?)px,\s*(.*?)px\)/);
+  let [scale, x, y] = match ? match.slice(1).map(parseFloat) : [1, 0, 0];
+
+  const scaledW = bmedia.offsetWidth * scale;
+  const scaledH = bmedia.offsetHeight * scale;
+  const maxX = Math.max(0, (scaledW - container.clientWidth) / (2 * scale));
+  const maxY = Math.max(0, (scaledH - container.clientHeight) / (2 * scale));
+
+  if (dx === 'max') x = maxX;
+  else if (dx === '-max') x = -maxX;
+  else x += dx;
+
+  if (dy === 'max') y = maxY;
+  else if (dy === '-max') y = -maxY;
+  else y += dy;
+
+  x = clamp(x, -maxX, maxX);
+  y = clamp(y, -maxY, maxY);
+
+  bmedia.style.transform = `scale(${scale}) translate(${x}px, ${y}px)`;
+};
+
+const zoom = (bmedia,isZoomIn) => {
+    if(isZoomIn){
+        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+        bmedia.style.transform = `scale(${scale + 0.1}) translate(0px, 0px)`;
+
+    }else{
+        let scale = parseFloat(bmedia.style.transform.match(/scale\((.*?)\)/)?.[1]) || 1;
+        bmedia.style.transform = `scale(${Math.max(scale - 0.1, 1)}) translate(0px, 0px)`;
+    }
+}
+
+const move = (e, dx, dy) => {
+    const bmedia=e.target.parentElement.parentElement.querySelector("img, video")
+    let [scale, translateX, translateY] = bmedia.style.transform.match(/scale\((.*?)\) translate\((.*?)px, (.*?)px\)/)?.slice(1).map(parseFloat) || [1, 0, 0];
+    bmedia.style.transform = `scale(${scale}) translate(${translateX + dx}px, ${translateY + dy}px)`;
+};
