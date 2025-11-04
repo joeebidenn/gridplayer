@@ -22,7 +22,7 @@ window.addEventListener("drop", (e) => {
     dropzone.style.display = "none";
     handleFiles(e.dataTransfer.files);
 });
-
+let keyCDown = false;
 document.addEventListener("keydown", (event) => {
     if (event.key === "i") {
       const nuevoTexto = prompt("Image extensions:", SUPPORTED_EXTENSIONS.image.join(", "));
@@ -34,7 +34,13 @@ document.addEventListener("keydown", (event) => {
         if (nuevoTexto !== null) {
           SUPPORTED_EXTENSIONS.video =  nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
         }
+    }else if(event.key.toLowerCase() === "c") {
+        keyCDown = true;
     }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.key.toLowerCase() === "c") keyCDown = false;
 });
 
 function handleFiles(files) {
@@ -90,50 +96,87 @@ function addMediaBox(src, type){
     boxmediacontainer.appendChild(mediabox);
 }
 
-function addDrawTool(mediabox){
-    const canvas = document.createElement("canvas");
-    canvas.className = "draw-layer";
-    canvas.style.position = "absolute";
-    canvas.style.top = 0;
-    canvas.style.left = 0;
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.pointerEvents = "auto";
+function addDrawTool(mediabox) {
+  const canvas = document.createElement("canvas");
+  canvas.className = "draw-layer";
+  canvas.style.position = "absolute";
+  canvas.style.top = 0;
+  canvas.style.left = 0;
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.pointerEvents = "auto";
+  const rect = mediabox.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let drawingCircle = false;
+  let startX = 0, startY = 0;
+  let currentX = 0, currentY = 0;
 
 
-    const ctx = canvas.getContext("2d");
-    let drawing = false;
+  // 🎯 Al presionar el mouse
+  canvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    drawingCircle = keyCDown; // si C está presionada al inicio
+    const rect = canvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
 
-    function resizeCanvas() {
-        const rect = mediabox.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+    if (!drawingCircle) {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
     }
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+  });
 
-    canvas.addEventListener("mousedown", (e) => {
-        drawing = true;
-        const rect = canvas.getBoundingClientRect();
+  // 🖱️ Movimiento (solo dibuja si no es modo círculo)
+  canvas.addEventListener("mousemove", (e) => {
+    if (!drawing || drawingCircle) return;
+    const rect = canvas.getBoundingClientRect();
+    currentX = e.clientX - rect.left;
+    currentY = e.clientY - rect.top;
+
+    ctx.lineTo(currentX, currentY);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.stroke();
+  });
+
+  // 🏁 Soltar mouse (finalizar trazo o círculo)
+  ["mouseup", "mouseleave"].forEach((ev) =>
+    canvas.addEventListener(ev, (e) => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      currentX = e.clientX - rect.left;
+      currentY = e.clientY - rect.top;
+
+      if (drawingCircle) {
+        // 🔵 Dibujar el círculo solo al final
+        const radius = Math.hypot(currentX - startX, currentY - startY);
         ctx.beginPath();
-        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    });
-
-    canvas.addEventListener("mousemove", (e) => {
-        if (!drawing) return;
-        const rect = canvas.getBoundingClientRect();
-        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-        ctx.strokeStyle = "red";
+        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "blue";
         ctx.lineWidth = 2;
-        ctx.lineCap = "round";
         ctx.stroke();
-    });
+      } else {
+        ctx.closePath();
+      }
 
-    ["mouseup", "mouseleave"].forEach(ev =>
-        canvas.addEventListener(ev, () => drawing = false)
-    );
+      drawing = false;
+    })
+  );
 
-    return canvas;
+  // 🧩 Insertar justo después de img/video/iframe
+  const media = mediabox.querySelector("img, video, iframe");
+  if (media && media.nextSibling) {
+    mediabox.insertBefore(canvas, media.nextSibling);
+  } else {
+    mediabox.appendChild(canvas);
+  }
+
+  return canvas;
 }
 
 function addImageVideoTools(mediabox){
