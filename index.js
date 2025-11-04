@@ -22,6 +22,20 @@ window.addEventListener("drop", (e) => {
     handleFiles(e.dataTransfer.files);
 });
 
+document.addEventListener("keydown", (event) => {
+    if (event.key === "i") {
+      const nuevoTexto = prompt("Image extensions:", SUPPORTED_EXTENSIONS.image.join(", "));
+      if (nuevoTexto !== null) {
+        SUPPORTED_EXTENSIONS.image =  nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
+      }
+    } else if(event.key === "v") {
+        const nuevoTexto = prompt("Video extensions:", SUPPORTED_EXTENSIONS.video.join(", "));
+        if (nuevoTexto !== null) {
+          SUPPORTED_EXTENSIONS.video =  nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
+        }
+    }
+});
+
 function handleFiles(files) {
     Array.from(files).forEach(file => {
         const ext = file.name.split('.').pop().toLowerCase();
