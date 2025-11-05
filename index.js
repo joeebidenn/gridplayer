@@ -446,8 +446,8 @@ function addMediaBoxExchangeComponent(mediabox){
         SWIPE_RECEIVER = e.target.parentElement;
         if (SWIPE_STARTER && SWIPE_RECEIVER && SWIPE_STARTER !== SWIPE_RECEIVER) {
 
-            const draggedMedia = SWIPE_STARTER.querySelector("img, video");
-            const targetMedia = SWIPE_RECEIVER.querySelector("img, video");
+            const draggedMedia = SWIPE_STARTER.querySelector("img, video, iframe");
+            const targetMedia = SWIPE_RECEIVER.querySelector("img, video, iframe");
 
             if (draggedMedia && targetMedia) {
                 const clonedDraggedMedia = draggedMedia.cloneNode(true);
