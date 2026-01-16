@@ -90,6 +90,7 @@ function addMediaBox(src, type){
             media.autoplay = true;
             media.muted = true;
             media.loop = true;
+            media.controlsList = 'noplaybackrate noremoteplayback';
         }
         mediabox.appendChild(media);
         addTools(mediabox);
